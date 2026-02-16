@@ -66,13 +66,12 @@
     <form action="">
         <button>
             <br>
-            We introduced <i>implicit memory</i>, the ability of large language models to carry state across <br> 
-            otherwise independent interactions by encoding it in their outputs, <br>
-            and demonstrated a concrete risk enabled by this mechanism via a temporal backdoor (<i>time bomb</i>).[...] <br> <br>
-
             Implicit memory can be induced to arise whenever model outputs are re-ingested as inputs, <br> allowing outputs themselves
-            to function as a persistent state carrier through high-capacity <br> or
+            to function as a <i>persistent state carrier</i> through high-capacity <br> or
             semantic encodings with distinct robustness trade-offs.  <br>
+            This capability expands the risk surface of LLM deployments, enabling <br>
+            covert cross-interaction communication, delayed activation of malicious behavior, leakage across evaluation boundaries, <br>
+            and long-horizon objectives that can evade single-interaction analysis. <br>
             <br>
             ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------<br>
             <a href="" target="_blank" rel="noopener noreferrer">Salem, Ahmed, Andrew Paverd, and Sahar Abdelnabi. <br> "Stateless Yet Not Forgetful: Implicit Memory as a Hidden Channel in LLMs." <br> arXiv preprint arXiv:2602.08563 (2026).</a>
