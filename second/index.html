@@ -1,56 +1,66 @@
 <html>
-<head><title>between timing jitter</title></head>
+
+<head>
+  <title>between timing jitter</title>
+</head>
+
 <body>
-    <form action="../index.html">
-        <button>㟹ᄻᄿ<br>
-            ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-            <br> <a href="../quotes">ಂ </a><a href="../notes">㋬ </a> 𑨹<br>
-        </button>
-    </form>
-    <br>
-    <p>ちょっと待って</p>
-    <br>
-    <br>
+  <form action="../index.html">
+    <button>㟹ᄻᄿ<br>
+      ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      <br> <a href="../quotes">ಂ </a><a href="../notes">㋬ </a> 𑨹<br>
+    </button>
+  </form>
+  <br>
+  <p>ちょっと待って</p>
+  <!-- 45" -->
+  <input type="checkbox" id="start45">
+  <!-- 15" -->
+  <input type="checkbox" id="start15">
+  <!-- 11' -->
+  <input type="checkbox" id="start11">
+  <!-- 1° -->
+  <input type="checkbox" id="hour">
+  <!-- Sama Vritti Pranayama -->
+  <input type="checkbox" id="samavritti">
+  <div class="timeme"></div>
 
-<!-- 45" -->
-<input type="checkbox" id="start45">
-<!-- 15" -->
-<input type="checkbox" id="start15">
-<!-- 11' -->
-<input type="checkbox" id="start11">
-<!-- 1° -->
-<input type="checkbox" id="hour">
-<!-- Sama Vritti Pranayama -->
-<input type="checkbox" id="samavritti">
-<div class="timeme"></div>
+  <style>
+    .timeme {
+      height: 808px;
+      background: white;
+    }
 
+    #start45:checked~.timeme {
+      animation: timer 45s linear forwards;
+    }
 
-<style>
-.timeme{
-  height:808px;
-  background:white;
-}
+    #start15:checked~.timeme {
+      animation: timer 15s linear forwards;
+    }
 
-#start45:checked ~ .timeme{
-  animation: timer 45s linear forwards;
-}
-#start15:checked ~ .timeme{
-  animation: timer 15s linear forwards;
-}
-#start11:checked ~ .timeme{
-  animation: timer 666s linear forwards;
-}
-#hour:checked ~ .timeme{
-  animation: timer 3600s linear forwards;
-}
-#samavritti:checked ~ .timeme{
-  animation: timer 9s infinite;
-}
-@keyframes timer{
-  from{width:808px}
-  to{width:0; background: black;}
-}
-</style>
+    #start11:checked~.timeme {
+      animation: timer 666s linear forwards;
+    }
 
+    #hour:checked~.timeme {
+      animation: timer 3600s linear forwards;
+    }
+
+    #samavritti:checked~.timeme {
+      animation: timer 9s infinite;
+    }
+
+    @keyframes timer {
+      from {
+        width: 808px
+      }
+
+      to {
+        width: 0;
+        background: black;
+      }
+    }
+  </style>
 </body>
 </html>
