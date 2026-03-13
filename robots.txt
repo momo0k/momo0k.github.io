@@ -1,0 +1,36 @@
+# =========================================
+# Welcome, fellow web crawler! 👋
+# This is my personal robots.txt file.
+# Please read the rules before wandering around.
+# =========================================
+
+# ---------- General rules for all bots ----------
+User-agent: *
+Disallow: /private/         # Shhh… top secret! 🤫
+Disallow: /admin/           # Admin area, hands off
+Disallow: /tmp/             # Temporary files, not worth your time
+Disallow: /*.pdf$           # PDFs are for humans only 😉
+
+# Slow down a bit if you obey crawl-delay
+Crawl-delay: 10             # Don’t rush, take a coffee break ☕
+
+# ---------- Googlebot rules ----------
+User-agent: Googlebot
+Allow: /                    # Feel free to roam the public parts!
+Disallow: /no-google/       # Sorry Google, this one’s off-limits
+
+# ---------- Bingbot rules ----------
+User-agent: Bingbot
+Allow: /                    # Go ahead and explore
+Disallow: /no-bing/         # Not your section, sorry!
+
+# ---------- Sitemap ----------
+Sitemap: https://example.com/sitemap.xml
+# This helps search engines know where to go. Thanks for reading!
+
+# =========================================
+# Notes from the human webmaster:
+# - robots.txt is polite, not a security guard.
+# - For truly secret stuff, use passwords or server rules.
+# - Enjoy your crawl, but behave yourself! 😎
+# =========================================
