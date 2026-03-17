@@ -5,48 +5,36 @@
 </head>
 
 <body>
-  <form action="../about_/">
-    <button>㟹ᄻᄿ<br>
-      ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      <br> <a href="../quotes">ಂ </a><a href="../notes">㋬ </a> 𑨹<br>
-    </button>
-  </form>
-  <br>
+<br>
   <p>ちょっと待って</p>
   <!-- 45" -->
   <input type="checkbox" id="start45">
-  <!-- 15" -->
-  <input type="checkbox" id="start15">
   <!-- 11' -->
   <input type="checkbox" id="start11">
-  <!-- 1° -->
-  <input type="checkbox" id="hour">
   <!-- Sama Vritti Pranayama -->
   <input type="checkbox" id="samavritti">
+  <br>
+    <br>
+      <br>
+        <br>
+    <br>
+      <br>
   <div class="timeme"></div>
 
   <style>
     .timeme {
       width:0;
-      height:26px;
-      background: white;
-      border-radius: 26px;
+      height:11vw;
+      background: black;
+      border-radius: 100px;
     }
 
     #start45:checked~.timeme {
       animation: timer 45s linear forwards;
     }
 
-    #start15:checked~.timeme {
-      animation: timer 15s linear forwards;
-    }
-
     #start11:checked~.timeme {
       animation: timer 666s linear forwards;
-    }
-
-    #hour:checked~.timeme {
-      animation: timer 3600s linear forwards;
     }
 
     #samavritti:checked~.timeme {
@@ -55,14 +43,44 @@
 
     @keyframes timer {
       from {
-        width: 796px
+        width: 98vw;
       }
 
       to {
-        width: 26px;
-        background: black;
+        width: 11vw;
+        background: white;
       }
     }
+    
+   	form {
+    width: 98vw; /* 150% of viewport width */
+  }
+     	button {
+    width: 98vw; /* 150% of viewport width */
+  }
+       	p {
+    font-size: 13vw;
+  }
+         	input {
+    width: 18vw;
+    height: 18vw;
+  }
+  
+  input[type="checkbox"] {
+    position: relative;
+    width: 3vw;
+    height: 3vw;
+    cursor: pointer;
+    z-index: 3;
+    appearance: none;
+    border: 10px solid whitw;
+    border-radius: 100px;
+    background: black;
+    margin: 20px;
+  }
+
   </style>
 </body>
 </html>
+
+
