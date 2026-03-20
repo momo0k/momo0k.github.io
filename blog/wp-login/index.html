@@ -16,17 +16,11 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		</head>
 	<body class="login no-js login-action-login wp-core-ui  locale-en-us">
-	<script type="text/javascript">
-/* <![CDATA[ */
-document.body.className = document.body.className.replace('no-js','js');
-/* ]]> */
-</script>
-
 				<h1 class="screen-reader-text">Log In</h1>
 			<div id="login">
 		<h1 role="presentation" class="wp-login-logo"><a href="https://wordpress.org/">Powered by WordPress</a></h1>
 
-		<form name="loginform" id="loginform" action="https://novembre.dedyn.io/wp-login.php" method="post">
+		<form name="loginform" id="loginform" action="https://novembre.dedyn.io/wp-login.php" method="get">
 			<p>
 				<label for="user_login">Username or Email Address</label>
 				<input type="text" name="log" id="user_login" class="input" value="" size="20" autocapitalize="off" autocomplete="username" required="required" />
@@ -44,7 +38,7 @@ document.body.className = document.body.className.replace('no-js','js');
 						<p class="forgetmenot"><input name="rememberme" type="checkbox" id="rememberme" value="forever"  /> <label for="rememberme">Remember Me</label></p>
 			<p class="submit">
 				<input type="submit" name="wp-submit" id="wp-submit" class="button button-primary button-large" value="Log In" />
-									<input type="hidden" name="redirect_to" value="https://novembre.dedyn.io/wp-admin/" />
+									<input type="hidden" name="redirect_to" value="https://novembre.dedyn.io/blog/" />
 									<input type="hidden" name="testcookie" value="1" />
 			</p>
 		</form>
