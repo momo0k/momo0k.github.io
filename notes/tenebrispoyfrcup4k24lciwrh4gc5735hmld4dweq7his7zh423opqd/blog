@@ -1,17 +1,36 @@
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 19/07/2014
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 19/07/2016
 
 happy doplhin! :dolphin:
 
-$ wget https://archive.debian.org/debian-6.0.10/i386/iso-cd/debian-6.0.10-i386-netinst.iso
+# apt get gcc-multilib gdb-multiarch 
+
+
+
+0 RUNNING a kernel application
+
+# apt get install qemu-system
+$ gcc -m32 -ffreestanding -c aa55.c -o dolphim32.o
+$ ld -m elf_i386 -Ttext 0x100000 dolphim32.o -o dolbin512
+$ qemu-system-i386 ./dolbin512
+
+
+
+1 RUNNING a pro test
+
+1.1 create primary hard drive and run native + foreign commands
+$ curl https://github.com/momo0k/momo0k.github.io/raw/refs/heads/maloam-patch-1/notes/tenebrispoyfrcup4k24lciwrh4gc5735hmld4dweq7his7zh423opqd/blob -o blob
+# apt get install qemu-utils qemu-system
 $ qemu-img create -f qcow2 img.img 10G
-$ qemu-system-i386 -m 1024 -cdrom debian-6.0.10-i386-netinst.iso -hda img.img -boot d
+$ qemu-system-i386 -m 1024 -cdrom blob -hda img.img -boot c || qemu-system-i386 -m 1024 -cdrom blob -hda img.img -boot d && qemu-system-i386 -m 1024 -hda img.img
 
- # apt-get install gcc-multilib gdb-multiarch qemu qemu-user qemu-user-static build-essential gdb
- # gcc -m32 -fno-stack-protector -z execstack -o dolphim32 dolphin.c
-
+1.2 cpu emulation only
+# apt-get install qemu-user qemu-user-static
+# gcc -m32 -fno-stack-protector -z execstack -o dolphim32 dolphin.c
 $ qemu-i386 ./dolphim32
+
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 03/12/2023
 
  hello world
- wlcome to my blof
+ welcome to my blob
