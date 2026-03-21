@@ -1,4 +1,17 @@
- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 03/12/2023
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 19/07/2014
+
+happy doplhin! :dolphin:
+
+$ wget https://archive.debian.org/debian-6.0.10/i386/iso-cd/debian-6.0.10-i386-netinst.iso
+$ qemu-img create -f qcow2 img.img 10G
+$ qemu-system-i386 -m 1024 -cdrom debian-6.0.10-i386-netinst.iso -hda img.img -boot d
+
+ # apt-get install gcc-multilib gdb-multiarch qemu qemu-user qemu-user-static build-essential gdb
+ # gcc -m32 -fno-stack-protector -z execstack -o dolphim32 dolphin.c
+
+$ qemu-i386 ./dolphim32
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 03/12/2023
 
  hello world
  wlcome to my blof
