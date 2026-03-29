@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 19/07/2016
 
-happy doplhin! :dolphin:
+happy doplhin!
 
 # apt get gcc-multilib gdb-multiarch 
 
@@ -18,7 +18,7 @@ $ qemu-system-i386 ./dolbin512
 1 RUNNING a pro test
 
 1.1 create primary hard drive and run native + foreign commands
-$ curl https://github.com/momo0k/momo0k.github.io/raw/refs/heads/maloam-patch-1/notes/tenebrispoyfrcup4k24lciwrh4gc5735hmld4dweq7his7zh423opqd/blob -o blob
+- pls use https://novembre.dedyn.io/notes/
 # apt get install qemu-utils qemu-system
 $ qemu-img create -f qcow2 img.img 10G
 $ qemu-system-i386 -m 1024 -cdrom blob -hda img.img -boot c || qemu-system-i386 -m 1024 -cdrom blob -hda img.img -boot d && qemu-system-i386 -m 1024 -hda img.img
