@@ -8,9 +8,18 @@
 </head>
 
 <body>
-    <a href="/c">
-        <img id="scaled" src="https://raining.short.gy/gray">
-    </a>
-</body>
-
+ <script>
+        const img = document.createElement('img');
+        img.id = 'scaled';
+	img.href='/c';
+        img.src = 'https://zvyvv.short.gy/social-file';
+        img.onerror = () => {
+            img.src = 'https://media.infosec.exchange/infosec.exchange/media_attachments/files/116/601/322/697/529/439/original/ff55454795698c51.png';
+            img.onerror = () => {
+                console.error('Well, hello there');
+            };
+        };
+        document.body.appendChild(img);
+<script>
+</body>	
 </html>
